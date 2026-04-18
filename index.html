@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aidin Email Signature Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand: #DD495F;
+      --brand-light: #fdf0f2;
+      --li-blue: #0077B5;
+      --dark: #1a1a1a;
+      --gray-1: #f6f6f6;
+      --gray-2: #e8e8e8;
+      --gray-3: #ccc;
+      --gray-4: #999;
+      --gray-5: #555;
+      --text: #1a1a1a;
+      --white: #fff;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 2px 10px rgba(0,0,0,0.07);
+      --shadow-lg: 0 8px 28px rgba(0,0,0,0.13);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "DM Sans", -apple-system, sans-serif;
+      background: var(--gray-1);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .topbar {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-2);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .topbar img { height: 32px; display: block; }
+    .topbar-sub { font-size: 12px; color: var(--gray-4); border-left: 1px solid var(--gray-2); padding-left: 12px; }
+    .layout { display: grid; grid-template-columns: 380px 1fr; min-height: calc(100vh - 57px); }
+    .form-panel { background: var(--white); border-right: 1px solid var(--gray-2); padding: 24px; overflow-y: auto; }
+    .section-title { font-size: 10px; font-weight: 700; color: var(--gray-4); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--gray-2); }
+    .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+    .field label { font-size: 12px; font-weight: 600; color: var(--gray-5); }
+    .field input[type=text] { font-family: "DM Sans", sans-serif; font-size: 14px; color: var(--text); background: var(--gray-1); border: 1.5px solid var(--gray-2); border-radius: var(--radius-sm); padding: 10px 13px; outline: none; width: 100%; transition: border-color .18s, box-shadow .18s, background .18s; }
+    .field input[type=text]:focus { border-color: var(--brand); background: var(--white); box-shadow: 0 0 0 3px rgba(221,73,95,0.1); }
+    .field input[type=text]::placeholder { color: var(--gray-3); }
+    .upload-zone { border: 2px dashed var(--gray-2); border-radius: var(--radius-sm); padding: 22px 16px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; background: var(--gray-1); position: relative; }
+    .upload-zone:hover { border-color: var(--brand); background: var(--brand-light); }
+    .upload-zone.has-photo { border-color: #43a047; background: #f1f8f1; }
+    .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-preview { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; object-position: top center; margin: 0 auto 8px; display: block; border: 2.5px solid var(--brand); }
+    .upload-icon { font-size: 30px; margin-bottom: 6px; }
+    .upload-text { font-size: 13px; font-weight: 600; color: var(--gray-5); }
+    .upload-sub  { font-size: 11px; color: var(--gray-4); margin-top: 3px; }
+    .upload-ok   { font-size: 12px; color: #2e7d32; font-weight: 600; margin-top: 5px; }
+    .sep { border: none; border-top: 1px solid var(--gray-2); margin: 18px 0; }
+    .toggle-block { border: 1.5px solid var(--gray-2); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 12px; background: var(--gray-1); transition: border-color .15s; }
+    .toggle-block.on { border-color: rgba(221,73,95,0.35); background: var(--brand-light); }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; }
+    .toggle-label { font-size: 12px; font-weight: 600; color: var(--gray-5); }
+    .toggle-body { margin-top: 10px; display: none; }
+    .toggle-body.show { display: block; }
+    .toggle-body input { font-family: "DM Sans", sans-serif; font-size: 13px; color: var(--text); background: var(--white); border: 1.5px solid var(--gray-2); border-radius: 6px; padding: 8px 11px; outline: none; width: 100%; }
+    .toggle-body input:focus { border-color: var(--brand); box-shadow: 0 0 0 2px rgba(221,73,95,0.1); }
+    .toggle-body input::placeholder { color: var(--gray-3); }
+    .switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .track { position: absolute; inset: 0; background: var(--gray-3); border-radius: 22px; cursor: pointer; transition: background .25s; }
+    .track::before { content: ""; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .25s; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+    .switch input:checked + .track { background: var(--brand); }
+    .switch input:checked + .track::before { transform: translateX(18px); }
+    .btn-build { width: 100%; padding: 13px; font-family: "DM Sans", sans-serif; font-size: 14px; font-weight: 700; background: var(--dark); color: #fff; border: none; border-radius: var(--radius-sm); cursor: pointer; margin-top: 6px; transition: background .18s, transform .15s, box-shadow .15s; }
+    .btn-build:hover { background: #333; transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+    .btn-build:active { transform: translateY(0); }
+    .form-err { font-size: 12px; color: #c62828; text-align: center; min-height: 16px; margin-top: 6px; font-weight: 500; }
+    .preview-panel { padding: 28px; display: flex; flex-direction: column; gap: 20px; }
+    .preview-label { font-size: 10px; font-weight: 700; color: var(--gray-4); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
+    .preview-box { background: var(--white); border: 1.5px dashed var(--gray-2); border-radius: var(--radius-sm); padding: 28px 24px; min-height: 160px; display: flex; align-items: center; overflow-x: auto; }
+    .preview-placeholder { font-size: 13px; color: var(--gray-3); }
+    .code-label { font-size: 10px; font-weight: 700; color: var(--gray-4); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+    .code-note  { font-size: 11px; color: var(--gray-4); font-weight: 400; text-transform: none; letter-spacing: 0; }
+    .code-box { background: #161b22; border-radius: var(--radius-sm); padding: 14px 16px; max-height: 200px; overflow-y: auto; border: 1px solid #30363d; margin-bottom: 14px; }
+    .code-box pre { font-family: "Courier New", monospace; font-size: 9.5px; color: #8b949e; white-space: pre-wrap; word-break: break-word; line-height: 1.6; }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-copy { font-family: "DM Sans", sans-serif; padding: 12px 0; font-size: 13px; font-weight: 700; border: none; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform .15s, box-shadow .15s; }
+    .btn-copy:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .btn-copy:active { transform: translateY(0); }
+    .btn-gmail { background: #4285F4; color: #fff; }
+    .btn-html  { background: var(--brand); color: #fff; }
+    .copy-msg  { font-size: 12px; font-weight: 600; text-align: center; margin-top: 10px; min-height: 18px; }
+    .copy-msg.ok  { color: #2e7d32; }
+    .copy-msg.err { color: #c62828; }
+    @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } .form-panel { border-right: none; border-bottom: 1px solid var(--gray-2); } .btn-row { grid-template-columns: 1fr; } }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #161b22; }
+    ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <img src="data:image/png;base64,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" alt="Aidin">
+  <span class="topbar-sub">Email Signature Generator &mdash; Internal tool</span>
+</div>
+
+<div class="layout">
+  <div class="form-panel">
+    <div class="section-title">Profile Details</div>
+    <div class="field"><label>Full name *</label><input id="f-name" type="text" placeholder="e.g. Gordon Rosen"></div>
+    <div class="field"><label>Job title *</label><input id="f-title" type="text" placeholder="e.g. Chief Growth Officer"></div>
+    <div class="field"><label>Work email *</label><input id="f-email" type="text" placeholder="e.g. gordon@myaidin.com"></div>
+    <div class="field"><label>LinkedIn URL</label><input id="f-li" type="text" placeholder="https://linkedin.com/in/username"></div>
+    <div class="field">
+      <label>Profile photo</label>
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('photo-file').click()">
+        <input type="file" id="photo-file" accept="image/*" onchange="handlePhoto(event)" style="display:none;">
+        <div id="upload-idle">
+          <div class="upload-icon">&#128247;</div>
+          <div class="upload-text">Click to upload your photo</div>
+          <div class="upload-sub">JPG or PNG &mdash; recommended under 300KB</div>
+        </div>
+        <div id="upload-done" style="display:none;">
+          <img id="upload-preview" class="upload-preview" src="" alt="Preview">
+          <div class="upload-ok" id="upload-ok-text">&#10003; Photo ready</div>
+          <div class="upload-sub" style="margin-top:4px;">Click to change</div>
+        </div>
+      </div>
+    </div>
+    <div class="sep"></div>
+    <div class="section-title">Optional fields</div>
+    <div class="toggle-block on" id="blk-phone">
+      <div class="toggle-row">
+        <span class="toggle-label">Phone number</span>
+        <label class="switch"><input type="checkbox" id="tog-phone" checked onchange="toggleBlk('phone')"><span class="track"></span></label>
+      </div>
+      <div class="toggle-body show" id="sub-phone"><input id="f-phone" type="text" placeholder="+1 (314) 495-3314"></div>
+    </div>
+    <div class="toggle-block on" id="blk-cta">
+      <div class="toggle-row">
+        <span class="toggle-label">Book a Meeting button</span>
+        <label class="switch"><input type="checkbox" id="tog-cta" checked onchange="toggleBlk('cta')"><span class="track"></span></label>
+      </div>
+      <div class="toggle-body show" id="sub-cta"><input id="f-cta" type="text" placeholder="https://meetings.hubspot.com/yourlink"></div>
+    </div>
+    <button class="btn-build" onclick="buildPreview()">&#9658;&nbsp; Build Preview</button>
+    <div class="form-err" id="form-err"></div>
+  </div>
+
+  <div class="preview-panel">
+    <div>
+      <div class="preview-label">Live Preview <span style="font-size:11px;color:#bbb;text-transform:none;letter-spacing:0;font-weight:400;">&mdash; copy &amp; paste into Gmail or HubSpot</span></div>
+      <div class="preview-box" id="preview-box">
+        <span class="preview-placeholder">Fill in your details and click Build Preview &rarr;</span>
+      </div>
+    </div>
+    <div>
+      <div class="code-label">Generated HTML <span class="code-note">&mdash; paste into HubSpot or any HTML email editor</span></div>
+      <div class="code-box"><pre id="code-out">&lt;!-- HTML will appear here after Build Preview --&gt;</pre></div>
+      <div class="btn-row">
+        <button class="btn-copy btn-gmail" onclick="copyGmail()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          Copy for Gmail
+        </button>
+        <button class="btn-copy btn-html" onclick="copyHTML()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+          Copy HTML
+        </button>
+      </div>
+      <div class="copy-msg" id="copy-msg"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const BRAND   = "#DD495F";
+  const LI_BLUE = "#0077B5";
+  const WEBSITE = "https://www.myaidin.com/";
+  const LOGO_URI = "data:image/png;base64,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";
+  let photoDataURI = "";
+  let lastHTML = "";
+
+  function handlePhoto(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      photoDataURI = ev.target.result;
+      document.getElementById("upload-idle").style.display = "none";
+      document.getElementById("upload-done").style.display = "block";
+      document.getElementById("upload-preview").src = photoDataURI;
+      document.getElementById("upload-ok-text").textContent = "\u2713 " + file.name;
+      document.getElementById("upload-zone").classList.add("has-photo");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function toggleBlk(key) {
+    const on = document.getElementById("tog-" + key).checked;
+    document.getElementById("sub-" + key).classList.toggle("show", on);
+    document.getElementById("blk-" + key).classList.toggle("on", on);
+  }
+
+  function v(id)   { const el = document.getElementById(id); return el ? el.value.trim() : ""; }
+  function tog(id) { const el = document.getElementById("tog-" + id); return el ? el.checked : false; }
+  function getInitials(name) { return name.split(" ").filter(Boolean).map(w=>w[0]).join("").toUpperCase().slice(0,2)||"AI"; }
+
+  function buildSignature(name, title, phone, email, photoURI, liUrl, ctaUrl, showPhone, showCta) {
+    const ini = getInitials(name);
+
+    const avatar = photoURI
+      ? `<img src="${photoURI}" width="100" height="100" alt="${name}" style="display:block;width:100px;height:100px;border-radius:50%;object-fit:cover;object-position:center top;border:none;">`
+      : `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td align="center" valign="middle" style="width:100px;height:100px;background:#e5e5e5;border-radius:50%;font-family:Arial,sans-serif;font-size:32px;font-weight:700;color:#aaa;">${ini}</td></tr></table>`;
+
+    const logo = `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:10px;"><tr><td><img src="${LOGO_URI}" width="90" alt="Aidin" style="display:block;width:90px;height:auto;border:none;"></td></tr></table>`;
+
+    /* KEY FIX: single-cell row, icon and text together with no width constraint on icon cell */
+    function row(icon, text, href) {
+      const content = href
+        ? `<a href="${href}" target="_blank" style="font-family:Arial,sans-serif;font-size:13px;color:#333;text-decoration:none;">${text}</a>`
+        : `<span style="font-family:Arial,sans-serif;font-size:13px;color:#333;">${text}</span>`;
+      return `<tr>
+        <td valign="middle" style="padding:3px 0;">
+          <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+            <tr>
+              <td valign="middle" style="padding-right:7px;">
+                <div style="width:22px;height:22px;background:${BRAND};border-radius:50%;text-align:center;line-height:22px;font-size:12px;color:white;font-weight:bold;display:inline-block;">${icon}</div>
+              </td>
+              <td valign="middle">${content}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>`;
+    }
+
+    let rows = "";
+    if (showPhone && phone) rows += row("&#9990;", phone, "tel:" + phone.replace(/[\s()+-]/g,""));
+    if (email)              rows += row("&#9993;", email, "mailto:" + email);
+    rows                        += row("&#8853;", WEBSITE, WEBSITE);
+
+    const liBtn = liUrl
+      ? `<a href="${liUrl}" target="_blank" style="display:inline-block;background:${LI_BLUE};color:white;font-family:Arial,sans-serif;font-size:14px;font-weight:900;width:30px;height:30px;line-height:30px;text-align:center;border-radius:4px;text-decoration:none;margin-right:8px;vertical-align:middle;">in</a>`
+      : "";
+
+    const ctaBtn = (showCta && ctaUrl)
+      ? `<a href="${ctaUrl}" target="_blank" style="display:inline-block;background:${BRAND};color:white;font-family:Arial,sans-serif;font-size:13px;font-weight:700;padding:0 18px;height:30px;line-height:30px;border-radius:4px;text-decoration:none;vertical-align:middle;">Book a Meeting</a>`
+      : "";
+
+    const btns = (liBtn || ctaBtn)
+      ? `<tr><td style="padding-top:10px;">${liBtn}${ctaBtn}</td></tr>` : "";
+
+    return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Arial,sans-serif;">
+  <tr>
+    <td valign="top" style="padding-right:18px;">
+      ${avatar}
+      ${logo}
+    </td>
+    <td valign="top" width="3" style="width:3px;padding:0;background:${BRAND};">&nbsp;</td>
+    <td valign="top" style="padding-left:18px;">
+      <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+        <tr><td style="padding-bottom:1px;"><span style="font-family:Arial,sans-serif;font-size:18px;font-weight:700;color:${BRAND};white-space:nowrap;">${name}</span></td></tr>
+        <tr><td style="padding-bottom:10px;"><span style="font-family:Arial,sans-serif;font-size:13px;color:#777;white-space:nowrap;">${title}</span></td></tr>
+        ${rows}
+        ${btns}
+      </table>
+    </td>
+  </tr>
+</table>`;
+  }
+
+  function buildPreview() {
+    const name = v("f-name");
+    const errEl = document.getElementById("form-err");
+    if (!name) { errEl.textContent = "Please enter at least your full name."; return; }
+    errEl.textContent = "";
+    const html = buildSignature(name, v("f-title"), v("f-phone"), v("f-email"), photoDataURI, v("f-li"), v("f-cta"), tog("phone"), tog("cta"));
+    lastHTML = html;
+    document.getElementById("preview-box").innerHTML = html;
+    document.getElementById("code-out").textContent  = html;
+    document.getElementById("copy-msg").textContent  = "";
+  }
+
+  function copyGmail() {
+    if (!lastHTML) { flash("Click Build Preview first.", "err"); return; }
+    const tryText = () => navigator.clipboard.writeText(lastHTML)
+      .then(() => flash("&#10003; Copied! Open Gmail &#8594; Settings &#8594; Signature and paste.", "ok"))
+      .catch(() => flash("Copy failed — select the code box manually.", "err"));
+    try {
+      const blob = new Blob([lastHTML], { type: "text/html" });
+      navigator.clipboard.write([new ClipboardItem({ "text/html": blob })])
+        .then(() => flash("&#10003; Rich text copied! Open Gmail &#8594; Settings &#8594; Signature and press Ctrl+V / &#8984;V", "ok"))
+        .catch(tryText);
+    } catch { tryText(); }
+  }
+
+  function copyHTML() {
+    if (!lastHTML) { flash("Click Build Preview first.", "err"); return; }
+    navigator.clipboard.writeText(lastHTML)
+      .then(() => flash("&#10003; HTML copied! Paste into HubSpot Custom HTML or any email HTML editor.", "ok"))
+      .catch(() => flash("Copy failed — select the code box manually.", "err"));
+  }
+
+  function flash(msg, type) {
+    const el = document.getElementById("copy-msg");
+    el.innerHTML = msg;
+    el.className = "copy-msg " + type;
+    setTimeout(() => { el.textContent = ""; el.className = "copy-msg"; }, 7000);
+  }
+</script>
+</body>
+</html>
