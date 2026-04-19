@@ -128,18 +128,21 @@
     .btn-build:hover { background: #333; transform: translateY(-1px); box-shadow: var(--shadow-lg); }
     .btn-build:active { transform: translateY(0); }
     .form-err { font-size: 12px; color: #c62828; text-align: center; min-height: 16px; margin-top: 6px; font-weight: 500; }
+
+    /* RIGHT PANEL */
     .preview-panel { padding: 28px; display: flex; flex-direction: column; gap: 20px; }
     .preview-label {
       font-size: 10px; font-weight: 700;
       color: var(--gray-4); letter-spacing: 0.1em;
       text-transform: uppercase; margin-bottom: 12px;
     }
+    /* WHITE background, no grey */
     .preview-box {
       background: var(--white);
-      border: 1.5px dashed var(--gray-2);
+      border: 1px solid var(--gray-2);
       border-radius: var(--radius-sm);
-      padding: 32px 28px;
-      min-height: 180px;
+      padding: 28px 24px;
+      min-height: 160px;
       display: flex;
       align-items: center;
       overflow-x: auto;
@@ -295,26 +298,20 @@
 
     const avatar = photoURI
       ? `<img src="${photoURI}" width="100" height="100" alt="${name}" style="display:block;width:100px;height:100px;border-radius:50%;object-fit:cover;object-position:center top;border:none;">`
-      : `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td align="center" valign="middle" style="width:100px;height:100px;background:#e5e5e5;border-radius:50%;font-family:Arial,sans-serif;font-size:32px;font-weight:700;color:#aaa;">${ini}</td></tr></table>`;
+      : `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td align="center" valign="middle" width="100" height="100" style="width:100px;height:100px;background:#e5e5e5;border-radius:50%;font-family:Arial,sans-serif;font-size:32px;font-weight:700;color:#aaa;">${ini}</td></tr></table>`;
 
     const logo = `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:12px;"><tr><td><img src="${LOGO_URI}" width="90" alt="Aidin" style="display:block;width:90px;height:auto;border:none;"></td></tr></table>`;
 
-    /* KEY FIX: use width="30" on icon cell so it never expands */
+    /* FIXED: icon cell width="28" enforces exactly 28px — no extra gap */
     function row(icon, text, href) {
       const content = href
         ? `<a href="${href}" target="_blank" style="font-family:Arial,sans-serif;font-size:13px;color:#333;text-decoration:none;">${text}</a>`
         : `<span style="font-family:Arial,sans-serif;font-size:13px;color:#333;">${text}</span>`;
       return `<tr>
-        <td width="30" valign="middle" style="width:30px;padding:3px 6px 3px 0;">
-          <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
-            <tr>
-              <td align="center" valign="middle" width="22" height="22" style="width:22px;height:22px;background:${BRAND};border-radius:50%;font-family:Arial,sans-serif;font-size:12px;color:white;font-weight:bold;text-align:center;line-height:22px;">
-                ${icon}
-              </td>
-            </tr>
-          </table>
+        <td width="28" valign="middle" style="padding:3px 6px 3px 0;width:28px;">
+          <div style="width:22px;height:22px;background:${BRAND};border-radius:50%;text-align:center;line-height:22px;font-size:12px;color:white;font-weight:bold;">${icon}</div>
         </td>
-        <td valign="middle" style="padding:3px 0;">${content}</td>
+        <td valign="middle" style="padding:3px 0;white-space:nowrap;">${content}</td>
       </tr>`;
     }
 
@@ -365,32 +362,21 @@
     document.getElementById("copy-msg").textContent  = "";
   }
 
-  /* ── Copy for Gmail: copies as rich text (rendered HTML)
-        so pasting into Gmail Signature editor shows the
-        actual formatted signature, NOT raw code.           ── */
+  /* Copy for Gmail = rich text (rendered, not code) */
   function copyGmail() {
     if (!lastHTML) { flash("&#9888; Click <strong>Build Preview</strong> first.", "err"); return; }
-
-    /* Step 1: try the modern ClipboardItem API (Chrome, Edge) */
     if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
       try {
         const blob = new Blob([lastHTML], { type: "text/html" });
-        const item = new ClipboardItem({ "text/html": blob });
-        navigator.clipboard.write([item])
-          .then(() => {
-            flash("&#10003; <strong>Rich text copied!</strong> Go to Gmail &rarr; Settings &rarr; Signature &rarr; paste with Ctrl+V / &#8984;V", "ok");
-          })
+        navigator.clipboard.write([new ClipboardItem({ "text/html": blob })])
+          .then(() => flash("&#10003; <strong>Rich text copied!</strong> Go to Gmail &rarr; Settings &rarr; Signature &rarr; paste with Ctrl+V / &#8984;V", "ok"))
           .catch(() => fallbackGmail());
         return;
-      } catch(e) {
-        /* ClipboardItem exists but threw — fall through */
-      }
+      } catch(e) {}
     }
     fallbackGmail();
   }
 
-  /* Step 2 fallback: use a hidden contenteditable div + execCommand
-     which copies formatted HTML in most browsers */
   function fallbackGmail() {
     try {
       const div = document.createElement("div");
@@ -409,22 +395,19 @@
       if (ok) {
         flash("&#10003; <strong>Rich text copied!</strong> Go to Gmail &rarr; Settings &rarr; Signature &rarr; paste with Ctrl+V / &#8984;V", "ok");
       } else {
-        flash("&#10007; Could not copy rich text. Use <strong>Copy HTML</strong> instead and paste into Gmail's HTML editor.", "err");
+        flash("&#10007; Could not copy. Try <strong>Copy HTML</strong> instead.", "err");
       }
     } catch(e) {
       flash("&#10007; Copy failed. Use <strong>Copy HTML</strong> instead.", "err");
     }
   }
 
-  /* ── Copy HTML: copies the raw HTML source code
-        Use this to paste into HubSpot Custom HTML,
-        Outlook's HTML editor, or any code field.    ── */
+  /* Copy HTML = raw source code */
   function copyHTML() {
     if (!lastHTML) { flash("&#9888; Click <strong>Build Preview</strong> first.", "err"); return; }
-
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(lastHTML)
-        .then(() => flash("&#10003; <strong>HTML code copied!</strong> Paste into HubSpot Custom HTML module or any email editor's HTML/source view.", "ok"))
+        .then(() => flash("&#10003; <strong>HTML code copied!</strong> Paste into HubSpot Custom HTML or any email HTML/source editor.", "ok"))
         .catch(() => legacyCopyHTML());
     } else {
       legacyCopyHTML();
@@ -442,7 +425,7 @@
       const ok = document.execCommand("copy");
       document.body.removeChild(ta);
       if (ok) {
-        flash("&#10003; <strong>HTML code copied!</strong> Paste into HubSpot Custom HTML module or any email editor's HTML/source view.", "ok");
+        flash("&#10003; <strong>HTML code copied!</strong> Paste into HubSpot Custom HTML or any email HTML/source editor.", "ok");
       } else {
         flash("&#10007; Copy failed &mdash; manually select the code box above and copy.", "err");
       }
